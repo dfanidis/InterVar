@@ -547,18 +547,19 @@ def check_annovar_result():
         if paras['skip_annovar'] != True:
             sys.exit()
     if inputft.lower() == 'avinput' :
-        cmd="perl "+paras['table_annovar']+" "+paras['inputfile']+" "+paras['database_locat']+" -buildver "+paras['buildver']+" -remove -out "+ paras['outfile']+" -protocol refGene,esp6500siv2_all,1000g2015aug_all,avsnp147,dbnsfp42a,clinvar_20210501,gnomad_genome,dbscsnv11,rmsk,ensGene,knownGene  -operation  g,f,f,f,f,f,f,f,r,g,g   -nastring ."+annovar_options
+        cmd="perl "+paras['table_annovar']+" "+paras['inputfile']+" "+paras['database_locat']+" -buildver "+paras['buildver']+" -remove -out "+ paras['outfile']+" -protocol refGene,esp6500siv2_all,ALL.sites.2015_08,avsnp151,dbnsfp47a,clinvar_20240611,gnomad41_genome,gnomad41_exome,dbscsnv11,rmsk,ensGene,knownGene,gme   -operation  g,f,f,f,f,f,f,f,f,r,g,g,f   -nastring ."+annovar_options
         print("%s" %cmd)
         os.system(cmd)
     if inputft.lower() == 'vcf' :
-        cmd="perl "+paras['table_annovar']+" "+paras['inputfile']+".avinput "+paras['database_locat']+" -buildver "+paras['buildver']+" -remove -out "+ paras['outfile']+" -protocol refGene,esp6500siv2_all,1000g2015aug_all,avsnp147,dbnsfp42a,clinvar_20210501,gnomad_genome,dbscsnv11,rmsk,ensGene,knownGene   -operation  g,f,f,f,f,f,f,f,r,g,g   -nastring ."+annovar_options
+        # cmd="perl "+paras['table_annovar']+" "+paras['inputfile']+".avinput "+paras['database_locat']+" -buildver "+paras['buildver']+" -remove -out "+ paras['outfile']+" -protocol refGene,esp6500siv2_all,1000g2015aug_all,avsnp147,dbnsfp42a,clinvar_20210501,gnomad_genome,dbscsnv11,rmsk,ensGene,knownGene   -operation  g,f,f,f,f,f,f,f,r,g,g   -nastring ."+annovar_options
+        cmd="perl "+paras['table_annovar']+" "+paras['inputfile']+".avinput "+paras['database_locat']+" -buildver "+paras['buildver']+" -remove -out "+ paras['outfile']+" -protocol refGene,esp6500siv2_all,ALL.sites.2015_08,avsnp151,dbnsfp47a,clinvar_20240611,gnomad41_genome,gnomad41_exome,dbscsnv11,rmsk,ensGene,knownGene,gme   -operation  g,f,f,f,f,f,f,f,f,r,g,g,f   -nastring ."+annovar_options
         print("%s" %cmd)
         os.system(cmd)
     if inputft.lower() == 'vcf_m' :
         for f in glob.iglob(paras['outfile']+"*.avinput"): 
             print("INFO: Begin to annotate sample file of %s ...." %(f))
             new_outfile=re.sub(".avinput","",f)
-            cmd="perl "+paras['table_annovar']+" "+f+" "+paras['database_locat']+" -buildver "+paras['buildver']+" -remove -out "+ new_outfile +" -protocol refGene,esp6500siv2_all,1000g2015aug_all,avsnp147,dbnsfp42a,clinvar_20210501,gnomad_genome,dbscsnv11,rmsk,ensGene,knownGene   -operation  g,f,f,f,f,f,f,f,r,g,g   -nastring ."+annovar_options
+            cmd="perl "+paras['table_annovar']+" "+f+" "+paras['database_locat']+" -buildver "+paras['buildver']+" -remove -out "+ new_outfile +" -protocol refGene,esp6500siv2_all,ALL.sites.2015_08,avsnp151,dbnsfp47a,clinvar_20240611,gnomad41_genome,gnomad41_exome,dbscsnv11,rmsk,ensGene,knownGene,gme   -operation  g,f,f,f,f,f,f,f,f,r,g,g,f   -nastring ."+annovar_options
             print("%s" %cmd)
             os.system(cmd)
         
@@ -1337,7 +1338,7 @@ def check_BA1(line,Freqs_flgs,Allels_flgs):
     '''
     BA1=0
     cls=line.split('\t')
-    Freqs_3pops={'1000g2015aug_all':0,'esp6500siv2_all':0,'gnomAD_genome_ALL':0}
+    Freqs_3pops={'ALL.sites.2015_08':0,'esp6500siv2_all':0,'gnomad41_genome_AF':0,'gnomad41_exome_AF':0}
     for key in Freqs_3pops.keys():
         try:
             if float(cls[Freqs_flgs[key]])>0.05: BA1=1
@@ -1808,8 +1809,25 @@ def my_inter_var(annovar_outfile):
     newoutfile=annovar_outfile+".grl_p"
     newoutfile2=annovar_outfile+".intervar"
 
-    Freqs_flgs={'1000g2015aug_all':0,'esp6500siv2_all':0,'gnomAD_genome_ALL':0,'gnomAD_genome_AFR':0,'gnomAD_genome_AMR':0,'gnomAD_genome_EAS':0,'gnomAD_genome_FIN':0,'gnomAD_genome_NFE':0,'gnomAD_genome_OTH':0,'gnomAD_genome_ASJ':0}
-    Funcanno_flgs={'Func.refGene':0,'ExonicFunc.refGene':0,'AAChange.refGene':0,'Gene':0,'Gene damage prediction (all disease-causing genes)':0,'CLNDBN':0,'CLNACC':0,'CLNDSDB':0,'dbscSNV_ADA_SCORE':0,'dbscSNV_RF_SCORE':0,'GERP++_RS':0,'LoFtool_percentile':0,'Interpro_domain':0,'rmsk':0,'SIFT_score':0,'phyloP46way_placental':0,'Gene.ensGene':0,'CLINSIG':0,'CADD_raw':0,'CADD_phred':0,'avsnp147':0,'AAChange.ensGene':0,'AAChange.knownGene':0,'MetaSVM_score':0,'Otherinfo':0}
+    # Define the ANNOVAR annotation fields that I would like InterVar to use 
+    # (for some reason they are not updated automatically from config.ini or Intervar.py function parameters)
+
+    # Freqs_flgs={'1000g2015aug_all':0,'esp6500siv2_all':0,'gnomAD_genome_ALL':0,'gnomAD_genome_AFR':0,'gnomAD_genome_AMR':0,'gnomAD_genome_EAS':0,'gnomAD_genome_FIN':0,'gnomAD_genome_NFE':0,'gnomAD_genome_OTH':0,'gnomAD_genome_ASJ':0}
+    Freqs_flgs={
+        'ALL.sites.2015_08':0,'esp6500siv2_all':0, 
+        # gnomad genome
+        'gnomad41_genome_AF':0, 'gnomad41_genome_AF_afr':0, 'gnomad41_genome_AF_ami':0, 'gnomad41_genome_AF_amr':0, 'gnomad41_genome_AF_asj':0,
+        'gnomad41_genome_AF_eas':0, 'gnomad41_genome_AF_fin':0, 'gnomad41_genome_AF_mid':0, 'gnomad41_genome_AF_nfe':0,
+        'gnomad41_genome_AF_remaining':0, 'gnomad41_genome_AF_sas':0,
+        # gnomad exome
+        'gnomad41_exome_AF':0, 'gnomad41_exome_AF_afr':0, 'gnomad41_exome_AF_amr':0, 'gnomad41_exome_AF_asj':0,
+        'gnomad41_exome_AF_eas':0, 'gnomad41_exome_AF_fin':0, 'gnomad41_exome_AF_mid':0,
+        'gnomad41_exome_AF_nfe':0, 'gnomad41_exome_AF_remaining':0, 'gnomad41_exome_AF_sas':0,
+        # GME variome
+        'GME_AF':0, 'GME_NWA':0, 'GME_NEA':0, 'GME_AP':0, 'GME_Israel':0, 'GME_SD':0, 'GME_TP':0, 'GME_CA':0
+    }
+    # Funcanno_flgs={'Func.refGene':0,'ExonicFunc.refGene':0,'AAChange.refGene':0,'Gene':0,'Gene damage prediction (all disease-causing genes)':0,'CLNDBN':0,'CLNACC':0,'CLNDSDB':0,'dbscSNV_ADA_SCORE':0,'dbscSNV_RF_SCORE':0,'GERP++_RS':0,'LoFtool_percentile':0,'Interpro_domain':0,'rmsk':0,'SIFT_score':0,'phyloP46way_placental':0,'Gene.ensGene':0,'CLINSIG':0,'CADD_raw':0,'CADD_phred':0,'avsnp147':0,'AAChange.ensGene':0,'AAChange.knownGene':0,'MetaSVM_score':0,'Otherinfo':0}
+    Funcanno_flgs={'Func.refGene':0,'ExonicFunc.refGene':0,'AAChange.refGene':0,'Gene':0,'Gene damage prediction (all disease-causing genes)':0,'CLNDBN':0,'CLNACC':0,'CLNDSDB':0,'dbscSNV_ADA_SCORE':0,'dbscSNV_RF_SCORE':0,'GERP++_RS':0,'LoFtool_percentile':0,'Interpro_domain':0,'rmsk':0,'SIFT_score':0,'phyloP46way_placental':0,'Gene.ensGene':0,'CLINSIG':0,'CADD_raw':0,'CADD_phred':0,'avsnp151':0,'AAChange.ensGene':0,'AAChange.knownGene':0,'MetaSVM_score':0,'Otherinfo':0}
     Allels_flgs={'Chr':0,'Start':0,'End':0,'Ref':0,'Alt':0}
 # gnomAD_genome_ALL esp6500siv2_all   1000g2015aug_all  SIFT_score    CADD_raw    CADD_phred  GERP++_RS   phyloP46way_placental  dbscSNV_ADA_SCORE   dbscSNV_RF_SCORE   Interpro_domain
 
@@ -1820,9 +1838,9 @@ def my_inter_var(annovar_outfile):
         line_sum=0;
         print("Notice: Begin the variants interpretation by InterVar ")
         if re.findall('true',paras['otherinfo'], flags=re.IGNORECASE)  :
-            fw.write("#%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tclinvar: %s \t InterVar: %s \t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Chr","Start","End","Ref","Alt","Ref.Gene","Func.refGene","ExonicFunc.refGene", "Gene.ensGene","avsnp147","AAChange.ensGene","AAChange.refGene","Clinvar","InterVar and Evidence","Freq_gnomAD_genome_ALL", "Freq_esp6500siv2_all","Freq_1000g2015aug_all", "CADD_raw","CADD_phred","SIFT_score","GERP++_RS","phyloP46way_placental","dbscSNV_ADA_SCORE", "dbscSNV_RF_SCORE", "Interpro_domain","AAChange.knownGene","rmsk","MetaSVM_score","Freq_gnomAD_genome_POPs","OMIM","Phenotype_MIM","OrphaNumber","Orpha","Otherinfo"  ))
+            fw.write("#%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tclinvar: %s \t InterVar: %s \t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Chr","Start","End","Ref","Alt","Ref.Gene","Func.refGene","ExonicFunc.refGene", "Gene.ensGene","avsnp151","AAChange.ensGene","AAChange.refGene","Clinvar","InterVar and Evidence","Freq_gnomad41_genome_AF","Freq_gnomad41_exome_AF","Freq_esp6500siv2_all","Freq_ALL.sites.2015_08","Freq_ALL_GME","CADD_raw","CADD_phred","SIFT_score","GERP++_RS","phyloP46way_placental","dbscSNV_ADA_SCORE", "dbscSNV_RF_SCORE", "Interpro_domain","AAChange.knownGene","rmsk","MetaSVM_score","Freq_gnomAD_genome_POPs","Freq_gnomAD_exome_POPs","Freq_GME_POPs","OMIM","Phenotype_MIM","OrphaNumber","Orpha","Otherinfo"  ))
         else:
-            fw.write("#%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tclinvar: %s \t InterVar: %s \t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Chr","Start","End","Ref","Alt","Ref.Gene","Func.refGene","ExonicFunc.refGene", "Gene.ensGene","avsnp147","AAChange.ensGene","AAChange.refGene","Clinvar","InterVar and Evidence","Freq_gnomAD_genome_ALL", "Freq_esp6500siv2_all","Freq_1000g2015aug_all", "CADD_raw","CADD_phred","SIFT_score","GERP++_RS","phyloP46way_placental","dbscSNV_ADA_SCORE", "dbscSNV_RF_SCORE", "Interpro_domain","AAChange.knownGene","rmsk","MetaSVM_score","Freq_gnomAD_genome_POPs","OMIM","Phenotype_MIM","OrphaNumber","Orpha"  ))
+            fw.write("#%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tclinvar: %s \t InterVar: %s \t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Chr","Start","End","Ref","Alt","Ref.Gene","Func.refGene","ExonicFunc.refGene", "Gene.ensGene","avsnp151","AAChange.ensGene","AAChange.refGene","Clinvar","InterVar and Evidence","Freq_gnomad41_genome_AF","Freq_gnomad41_exome_AF","Freq_esp6500siv2_all","Freq_ALL.sites.2015_08","Freq_ALL_GME","CADD_raw","CADD_phred","SIFT_score","GERP++_RS","phyloP46way_placental","dbscSNV_ADA_SCORE", "dbscSNV_RF_SCORE", "Interpro_domain","AAChange.knownGene","rmsk","MetaSVM_score","Freq_gnomAD_genome_POPs","Freq_gnomAD_exome_POPs","Freq_GME_POPs","OMIM","Phenotype_MIM","OrphaNumber","Orpha"  ))
 
         for line in strs.split('\n'):
             BP="UNK" # the inter of pathogenetic/benign
@@ -1842,7 +1860,10 @@ def my_inter_var(annovar_outfile):
                     clinvar_bp=cls3[0]
                     
                 intervar_bp=assign(BP,line,Freqs_flgs,Funcanno_flgs,Allels_flgs)
-                Freq_gnomAD_genome_POPs="AFR:"+cls[Freqs_flgs['gnomAD_genome_AFR']]+",AMR:"+cls[Freqs_flgs['gnomAD_genome_AMR']]+",EAS:"+cls[Freqs_flgs['gnomAD_genome_EAS']]+",FIN:"+cls[Freqs_flgs['gnomAD_genome_FIN']]+",NFE:"+cls[Freqs_flgs['gnomAD_genome_NFE']]+",OTH:"+cls[Freqs_flgs['gnomAD_genome_OTH']]+",ASJ:"+cls[Freqs_flgs['gnomAD_genome_ASJ']]
+                # Freq_gnomAD_genome_POPs="AFR:"+cls[Freqs_flgs['gnomAD_genome_AFR']]+",AMR:"+cls[Freqs_flgs['gnomAD_genome_AMR']]+",EAS:"+cls[Freqs_flgs['gnomAD_genome_EAS']]+",FIN:"+cls[Freqs_flgs['gnomAD_genome_FIN']]+",NFE:"+cls[Freqs_flgs['gnomAD_genome_NFE']]+",OTH:"+cls[Freqs_flgs['gnomAD_genome_OTH']]+",ASJ:"+cls[Freqs_flgs['gnomAD_genome_ASJ']]
+                Freq_gnomAD_genome_POPs='AFR:'+cls[Freqs_flgs['gnomad41_genome_AF_afr']]+',AMI:'+cls[Freqs_flgs['gnomad41_genome_AF_ami']]+',AMR:'+cls[Freqs_flgs['gnomad41_genome_AF_amr']]+',ASJ:'+cls[Freqs_flgs['gnomad41_genome_AF_asj']]+',EAS:'+cls[Freqs_flgs['gnomad41_genome_AF_eas']]+',FIN:'+cls[Freqs_flgs['gnomad41_genome_AF_fin']]+',MID:'+cls[Freqs_flgs['gnomad41_genome_AF_mid']]+',NFE:'+cls[Freqs_flgs['gnomad41_genome_AF_nfe']]+',Remaining:'+cls[Freqs_flgs['gnomad41_genome_AF_remaining']]+',SAS:'+cls[Freqs_flgs['gnomad41_genome_AF_sas']]
+                Freq_gnomAD_exome_POPs='AFR:'+cls[Freqs_flgs['gnomad41_exome_AF_afr']]+'AMR:'+cls[Freqs_flgs['gnomad41_exome_AF_amr']]+'ASJ:'+cls[Freqs_flgs['gnomad41_exome_AF_asj']]+'EAS:'+cls[Freqs_flgs['gnomad41_exome_AF_eas']]+'FIN:'+cls[Freqs_flgs['gnomad41_exome_AF_fin']]+'MID:'+cls[Freqs_flgs['gnomad41_exome_AF_mid']]+'NFE:'+cls[Freqs_flgs['gnomad41_exome_AF_nfe']]+'Remaining:'+cls[Freqs_flgs['gnomad41_exome_AF_remaining']]+'SAS:'+cls[Freqs_flgs['gnomad41_exome_AF_sas']]
+                Freq_GME_POPs='NWA:'+cls[Freqs_flgs['GME_NWA']]+',NEA:'+cls[Freqs_flgs['GME_NEA']]+',AP:'+cls[Freqs_flgs['GME_AP']]+',Israel:'+cls[Freqs_flgs['GME_Israel']]+',SD:'+cls[Freqs_flgs['GME_SD']]+',TP:'+cls[Freqs_flgs['GME_TP']]+',CA:'+cls[Freqs_flgs['GME_CA']]
                 OMIM="." 
                 mim2=mim2gene_dict2.get(cls[Funcanno_flgs['Gene']],".")
                 mim1=mim2gene_dict.get(cls[Funcanno_flgs['Gene.ensGene']],".")
@@ -1865,9 +1886,9 @@ def my_inter_var(annovar_outfile):
 
                 if re.findall('true',paras['otherinfo'], flags=re.IGNORECASE)  :
                     cls[Funcanno_flgs['Otherinfo']]=cls[Funcanno_flgs['Otherinfo']].replace('\t', ';')
-                    fw.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tclinvar: %s \t InterVar: %s \t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cls[Allels_flgs['Chr']],cls[Allels_flgs['Start']],cls[Allels_flgs['End']],cls[Allels_flgs['Ref']],cls[Allels_flgs['Alt']],cls[Funcanno_flgs['Gene']],cls[Funcanno_flgs['Func.refGene']],cls[Funcanno_flgs['ExonicFunc.refGene']], cls[Funcanno_flgs['Gene.ensGene']],cls[Funcanno_flgs['avsnp147']],cls[Funcanno_flgs['AAChange.ensGene']],cls[Funcanno_flgs['AAChange.refGene']],clinvar_bp,intervar_bp,cls[Freqs_flgs['gnomAD_genome_ALL']], cls[Freqs_flgs['esp6500siv2_all']], cls[Freqs_flgs['1000g2015aug_all']], cls[Funcanno_flgs['CADD_raw']],cls[Funcanno_flgs['CADD_phred']],cls[Funcanno_flgs['SIFT_score']],  cls[Funcanno_flgs['GERP++_RS']],".", cls[Funcanno_flgs['dbscSNV_ADA_SCORE']], cls[Funcanno_flgs['dbscSNV_RF_SCORE']], cls[Funcanno_flgs['Interpro_domain']],cls[Funcanno_flgs['AAChange.knownGene']],cls[Funcanno_flgs['rmsk']],cls[Funcanno_flgs['MetaSVM_score']],Freq_gnomAD_genome_POPs,OMIM,Pheno_MIM,orpha,orpha_details,cls[Funcanno_flgs['Otherinfo']]   ))
+                    fw.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tclinvar: %s \t InterVar: %s \t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cls[Allels_flgs['Chr']],cls[Allels_flgs['Start']],cls[Allels_flgs['End']],cls[Allels_flgs['Ref']],cls[Allels_flgs['Alt']],cls[Funcanno_flgs['Gene']],cls[Funcanno_flgs['Func.refGene']],cls[Funcanno_flgs['ExonicFunc.refGene']], cls[Funcanno_flgs['Gene.ensGene']],cls[Funcanno_flgs['avsnp151']],cls[Funcanno_flgs['AAChange.ensGene']],cls[Funcanno_flgs['AAChange.refGene']],clinvar_bp,intervar_bp,cls[Freqs_flgs['gnomad41_genome_AF']],cls[Freqs_flgs['gnomad41_exome_AF']],cls[Freqs_flgs['GME_AF']],cls[Freqs_flgs['esp6500siv2_all']], cls[Freqs_flgs['ALL.sites.2015_08']], cls[Funcanno_flgs['CADD_raw']],cls[Funcanno_flgs['CADD_phred']],cls[Funcanno_flgs['SIFT_score']],  cls[Funcanno_flgs['GERP++_RS']],".", cls[Funcanno_flgs['dbscSNV_ADA_SCORE']], cls[Funcanno_flgs['dbscSNV_RF_SCORE']], cls[Funcanno_flgs['Interpro_domain']],cls[Funcanno_flgs['AAChange.knownGene']],cls[Funcanno_flgs['rmsk']],cls[Funcanno_flgs['MetaSVM_score']],Freq_gnomAD_genome_POPs,Freq_gnomAD_exome_POPs,Freq_GME_POPs,OMIM,Pheno_MIM,orpha,orpha_details,cls[Funcanno_flgs['Otherinfo']]   ))
                 else:
-                    fw.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tclinvar: %s \t InterVar: %s \t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cls[Allels_flgs['Chr']],cls[Allels_flgs['Start']],cls[Allels_flgs['End']],cls[Allels_flgs['Ref']],cls[Allels_flgs['Alt']],cls[Funcanno_flgs['Gene']],cls[Funcanno_flgs['Func.refGene']],cls[Funcanno_flgs['ExonicFunc.refGene']], cls[Funcanno_flgs['Gene.ensGene']],cls[Funcanno_flgs['avsnp147']],cls[Funcanno_flgs['AAChange.ensGene']],cls[Funcanno_flgs['AAChange.refGene']],clinvar_bp,intervar_bp,cls[Freqs_flgs['gnomAD_genome_ALL']], cls[Freqs_flgs['esp6500siv2_all']], cls[Freqs_flgs['1000g2015aug_all']], cls[Funcanno_flgs['CADD_raw']],cls[Funcanno_flgs['CADD_phred']],cls[Funcanno_flgs['SIFT_score']],  cls[Funcanno_flgs['GERP++_RS']],".", cls[Funcanno_flgs['dbscSNV_ADA_SCORE']], cls[Funcanno_flgs['dbscSNV_RF_SCORE']], cls[Funcanno_flgs['Interpro_domain']],cls[Funcanno_flgs['AAChange.knownGene']],cls[Funcanno_flgs['rmsk']],cls[Funcanno_flgs['MetaSVM_score']],Freq_gnomAD_genome_POPs,OMIM,Pheno_MIM,orpha,orpha_details  ))
+                    fw.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tclinvar: %s \t InterVar: %s \t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cls[Allels_flgs['Chr']],cls[Allels_flgs['Start']],cls[Allels_flgs['End']],cls[Allels_flgs['Ref']],cls[Allels_flgs['Alt']],cls[Funcanno_flgs['Gene']],cls[Funcanno_flgs['Func.refGene']],cls[Funcanno_flgs['ExonicFunc.refGene']], cls[Funcanno_flgs['Gene.ensGene']],cls[Funcanno_flgs['avsnp151']],cls[Funcanno_flgs['AAChange.ensGene']],cls[Funcanno_flgs['AAChange.refGene']],clinvar_bp,intervar_bp,cls[Freqs_flgs['gnomad41_genome_AF']],cls[Freqs_flgs['gnomad41_exome_AF']],cls[Freqs_flgs['GME_AF']],cls[Freqs_flgs['esp6500siv2_all']], cls[Freqs_flgs['ALL.sites.2015_08']], cls[Funcanno_flgs['CADD_raw']],cls[Funcanno_flgs['CADD_phred']],cls[Funcanno_flgs['SIFT_score']],  cls[Funcanno_flgs['GERP++_RS']],".", cls[Funcanno_flgs['dbscSNV_ADA_SCORE']], cls[Funcanno_flgs['dbscSNV_RF_SCORE']], cls[Funcanno_flgs['Interpro_domain']],cls[Funcanno_flgs['AAChange.knownGene']],cls[Funcanno_flgs['rmsk']],cls[Funcanno_flgs['MetaSVM_score']],Freq_gnomAD_genome_POPs,Freq_gnomAD_exome_POPs,Freq_GME_POPs,OMIM,Pheno_MIM,orpha,orpha_details  ))
 
                 #print("%s\t%s %s" % (line,clinvar_bp,intervar_bp))
 
